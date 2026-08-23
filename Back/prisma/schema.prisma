@@ -39,7 +39,7 @@ model Console {
   ano Int @db.SmallInt
   foto String
   video String
-  descricao String
+  descricao String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
@@ -70,6 +70,8 @@ model Midia {
   ano Int @db.SmallInt
   video String
   tipo TipoMidia @default(Fita)
+
+  descricaoDetalhada String?
 
   marcaid Int
   marca Marca @relation(fields: [marcaid], references: [id])
