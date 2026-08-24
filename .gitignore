@@ -29,3 +29,5 @@ Thumbs.db
 
 # Prisma generated client (already generated in repo structure)
 Back/generated/prisma/
+
+node_modules/

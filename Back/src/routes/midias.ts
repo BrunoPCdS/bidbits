@@ -12,7 +12,6 @@ const midiaSchema = z.object({
     ano: z.number().int(),
     foto: z.string().min(1, {message: 'Foto é obrigatória'}),
     video: z.string().min(1, {message: 'Vídeo é obrigatório'}),
-    adminId: z.number().int().positive(),
     descricaoDetalhada: z.string().optional(),
     tipo: z.enum(['Fita', 'DVD', 'CD']).default('Fita'),
 });
@@ -72,7 +71,7 @@ router.post('/', async (req, res) => {
         return;
     }
 
-    const { nome, marcaid, empresa, ano, foto, video, adminId, descricaoDetalhada, tipo } = valida.data;
+    const { nome, marcaid, empresa, ano, foto, video, descricaoDetalhada, tipo } = valida.data;
 
     try {
         const midiaItem = await prisma.midia.create({
@@ -83,7 +82,6 @@ router.post('/', async (req, res) => {
                 ano,
                 foto,
                 video,
-                adminId,
                 descricao: descricaoDetalhada ?? '',
                 descricaoDetalhada,
                 tipo
