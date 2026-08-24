@@ -7,16 +7,21 @@ const router = Router()
 const clienteSchema = z.object({
     nome: z.string()
         .min(3, "Nome deve possuir no minimo 3 caracteres")
-        .max(80, "Nome deve ter no maximo 80 caracteres"),
-    telefone: z.string()
-        .min(8, "Telefone deve possuir no minimo 8 caracteres")
-        .max(20, "Telefone deve ter no maximo 20 caracteres"),
-    email: z.email()
+        .max(50, "Nome deve ter no maximo 50 caracteres"),
+    email: z.email(),
+    senha: z.string().min(8, "Senha deve possuir no minimo 8 caracteres")
 })
+
+const usuarioPublico = {
+    id: true,
+    nome: true,
+    email: true
+} as const
 
 router.get("/", async (_req: Request, res: Response) => {
     try {
-        const clientes = await prisma.cliente.findMany({
+        const clientes = await prisma.usuario.findMany({
+            select: usuarioPublico,
             orderBy: { id: "asc" }
         })
 
@@ -35,24 +40,15 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     try {
-        const cliente = await prisma.cliente.findUnique({
+        const cliente = await prisma.usuario.findUnique({
             where: { id },
-            include: {
-                agendamentos: {
+            select: {
+                ...usuarioPublico,
+                lances: {
                     include: {
-                        servico: true
+                        leilao: true
                     },
-                    orderBy: { dataHora: "desc" }
-                },
-                historicoFidelidade: {
-                    include: {
-                        agendamento: {
-                            include: {
-                                servico: true
-                            }
-                        }
-                    },
-                    orderBy: { data: "desc" }
+                    orderBy: { dataLance: "desc" }
                 }
             }
         })
@@ -76,15 +72,16 @@ router.post("/", async (req: Request, res: Response) => {
         return
     }
 
-    const { nome, telefone, email } = valida.data
+    const { nome, email, senha } = valida.data
 
     try {
-        const cliente = await prisma.cliente.create({
+        const cliente = await prisma.usuario.create({
             data: {
                 nome,
-                telefone,
-                email
-            }
+                email,
+                senha
+            },
+            select: usuarioPublico
         })
 
         res.status(201).json(cliente)
@@ -108,16 +105,17 @@ router.put("/:id", async (req: Request, res: Response) => {
         return
     }
 
-    const { nome, telefone, email } = valida.data
+    const { nome, email, senha } = valida.data
 
     try {
-        const cliente = await prisma.cliente.update({
+        const cliente = await prisma.usuario.update({
             where: { id },
             data: {
                 nome,
-                telefone,
-                email
-            }
+                email,
+                senha
+            },
+            select: usuarioPublico
         })
 
         res.status(200).json(cliente)
@@ -135,8 +133,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     try {
-        const cliente = await prisma.cliente.delete({
-            where: { id }
+        const cliente = await prisma.usuario.delete({
+            where: { id },
+            select: usuarioPublico
         })
 
         res.status(200).json(cliente)
