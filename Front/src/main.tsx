@@ -16,7 +16,7 @@ const rotas = createBrowserRouter([
     children: [
       { index: true, element: <App /> },
       { path: 'login', element: <Login /> },
-      { path: 'detalhes/:carroId', element: <Detalhes /> },
+      { path: 'detalhes/:leilaoId', element: <Detalhes /> },
     ],
   },
 ])

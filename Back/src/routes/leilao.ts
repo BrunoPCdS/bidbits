@@ -1,5 +1,4 @@
-
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../lib/prisma"
 
 import { Router } from 'express'
 import { z } from 'zod'
@@ -7,138 +6,146 @@ import { z } from 'zod'
 const router = Router()
 
 const leilaoSchema = z.object({
-    nome: z.string().min(2, { message: "Nome deve possuir, no mínimo, 2 caracteres" }),
-    descricao: z.string().min(3, { message: "Descrição deve possuir, no mínimo, 3 caracteres" }),
-    dataInicio: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de início inválida" }),
-    dataFim: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de fim inválida" }),
-    marcaid: z.number().int().positive(),
-    ano: z.number().int(),
-    foto: z.string().min(1, { message: "Foto é obrigatória" }),
-    video: z.string().min(1, { message: "Vídeo é obrigatório" }),
+  nome: z.string().min(2, { message: "Nome deve possuir, no mínimo, 2 caracteres" }),
+  descricao: z.string().min(3, { message: "Descrição deve possuir, no mínimo, 3 caracteres" }),
+  valorInicial: z.number().nonnegative(),
+  consoleId: z.number().int().positive().nullable().optional(),
+  midiaId: z.number().int().positive().nullable().optional(),
+  dataInicio: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de início inválida" }),
+  dataFim: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de fim inválida" }),
+  adminId: z.number().int().positive(),
+}).refine((data) => Boolean(data.consoleId || data.midiaId), {
+  message: "Informe pelo menos um consoleId ou midiaId",
+  path: ["consoleId"],
 })
 
 router.get('/', async (_req, res) => {
-    try {
-        const leiloes = await prisma.leilao.findMany({
-            where: { deletadoEm: null },
-            include: {
-                marca: true,
-                criadoPor: {
-                    select: { id: true, nome: true, email: true },
-                },
-            },
-        });
+  try {
+    const leiloes = await prisma.leilao.findMany({
+      include: {
+        console: true,
+        midia: true,
+        criadoPor: {
+          select: { id: true, nome: true, email: true },
+        },
+      },
+      orderBy: { id: 'desc' },
+    })
 
-        res.status(200).json(leiloes);
-    } catch (error) {
-        res.status(500).json({ erro: error });
-    }
+    res.status(200).json(leiloes)
+  } catch (error) {
+    res.status(500).json({ erro: error })
+  }
 })
 
 router.get('/:id', async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params
 
-    try {
-        const leilaoItem = await prisma.leilao.findFirst({
-            where: { id: Number(id), deletadoEm: null },
-            include: {
-                marca: true,
-                criadoPor: {
-                    select: { id: true, nome: true, email: true },
-                },
-            },
-        });
+  try {
+    const leilaoItem = await prisma.leilao.findUnique({
+      where: { id: Number(id) },
+      include: {
+        console: true,
+        midia: true,
+        criadoPor: {
+          select: { id: true, nome: true, email: true },
+        },
+      },
+    })
 
-        if (!leilaoItem) {
-            res.status(404).json({ erro: 'Leilão não encontrado' });
-            return;
-        }
-
-        res.status(200).json(leilaoItem);
-    } catch (error) {
-        res.status(500).json({ erro: error });
+    if (!leilaoItem) {
+      res.status(404).json({ erro: 'Leilão não encontrado' })
+      return
     }
-});
+
+    res.status(200).json(leilaoItem)
+  } catch (error) {
+    res.status(500).json({ erro: error })
+  }
+})
 
 router.post('/', async (req, res) => {
-    const valida = leilaoSchema.safeParse(req.body);
-    if (!valida.success) {
-        res.status(400).json({ erro: valida.error });
-        return;
-    }
-    const { nome, descricao, dataInicio, dataFim, marcaid, ano, foto, video } = valida.data;
-    const inicio = new Date(valida.data.dataInicio);
-    const fim = new Date(valida.data.dataFim);
-    const dataFimValida = fim > inicio ? fim : inicio;
-    try {
-        const leilaoItem = await prisma.leilao.create({
-            data: {
-                nome,
-                descricao,
-                dataInicio: inicio,
-                dataFim: dataFimValida,
-                marcaid,
-                ano,
-                foto,
-                video,
-            },
-        });
-        res.status(201).json(leilaoItem);
-    } catch (error) {
-        res.status(500).json({ erro: error });
-    }
-});
+  const valida = leilaoSchema.safeParse(req.body)
+
+  if (!valida.success) {
+    res.status(400).json({ erro: valida.error })
+    return
+  }
+
+  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, adminId } = valida.data
+
+  try {
+    const leilaoItem = await prisma.leilao.create({
+      data: {
+        nome,
+        descricao,
+        valorInicial,
+        dataInicio: new Date(dataInicio),
+        dataFim: new Date(dataFim),
+        adminId,
+        ...(consoleId ? { console: { connect: { id: consoleId } } } : {}),
+        ...(midiaId ? { midia: { connect: { id: midiaId } } } : {}),
+      },
+      include: {
+        console: true,
+        midia: true,
+      },
+    })
+
+    res.status(201).json(leilaoItem)
+  } catch (error) {
+    res.status(500).json({ erro: error })
+  }
+})
 
 router.put('/:id', async (req, res) => {
-    const { id } = req.params;
-    const valida = leilaoSchema.safeParse(req.body);
-    if (!valida.success) {
-        res.status(400).json({ erro: valida.error });
-        return;
-    }
-    const { nome, descricao, dataInicio, dataFim, marcaid, ano, foto, video } = valida.data;
-    const inicio = new Date(valida.data.dataInicio);
-    const fim = new Date(valida.data.dataFim);
-    const dataFimValida = fim > inicio ? fim : inicio;
-    try {
-        const leilaoItem = await prisma.leilao.update({
-            where: { id: Number(id) },
-            data: {
-                nome,
-                descricao,
-                dataInicio: inicio,
-                dataFim: dataFimValida,
-                marcaid,
-                ano,
-                foto,
-                video,
-            },
-        });
-        res.status(200).json(leilaoItem);
-    } catch (error) {
-        res.status(500).json({ erro: error });
-    }
-});
+  const { id } = req.params
+  const valida = leilaoSchema.safeParse(req.body)
+
+  if (!valida.success) {
+    res.status(400).json({ erro: valida.error })
+    return
+  }
+
+  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, adminId } = valida.data
+
+  try {
+    const leilaoItem = await prisma.leilao.update({
+      where: { id: Number(id) },
+      data: {
+        nome,
+        descricao,
+        valorInicial,
+        dataInicio: new Date(dataInicio),
+        dataFim: new Date(dataFim),
+        adminId,
+        ...(consoleId ? { console: { connect: { id: consoleId } } } : {}),
+        ...(midiaId ? { midia: { connect: { id: midiaId } } } : {}),
+      },
+      include: {
+        console: true,
+        midia: true,
+      },
+    })
+
+    res.status(200).json(leilaoItem)
+  } catch (error) {
+    res.status(500).json({ erro: error })
+  }
+})
 
 router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
-    const deletadoEm = new Date();
-    const removidoPoId = Number(req.query.adminId);
+  const { id } = req.params
 
-    if (!removidoPoId) {
-        res.status(400).json({ erro: 'ID do administrador é obrigatório para deletar o leilão' });
-        return;
-    }
+  try {
+    const leilaoItem = await prisma.leilao.delete({
+      where: { id: Number(id) },
+    })
 
-    try {
-        const leilaoItem = await prisma.leilao.update({
-            where: { id: Number(id) },
-            data: { deletadoEm },
-        });
-        res.status(200).json(leilaoItem);
-    } catch (error) {
-        res.status(500).json({ erro: error });
-    }
-});
+    res.status(200).json(leilaoItem)
+  } catch (error) {
+    res.status(500).json({ erro: error })
+  }
+})
 
-export default router;
+export default router
