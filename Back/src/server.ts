@@ -5,6 +5,7 @@ import routesMarcas from './routes/marcas'
 import routesConsoles from './routes/consoles'
 import routesMidias from './routes/midias'
 import routesLeiloes from './routes/leilao'
+import routesClientes from './routes/cliente'
 
 const app = express()
 const port = 3000
@@ -24,6 +25,7 @@ app.use("/marcas", routesMarcas)
 app.use("/consoles", routesConsoles)
 app.use("/midias", routesMidias)
 app.use("/leiloes", routesLeiloes)
+app.use("/clientes", routesClientes)
 
 app.get('/', (req, res) => {
   res.send('API: Leilao de Games')
