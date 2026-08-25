@@ -82,7 +82,7 @@ router.post('/', async (req, res) => {
         valorInicial,
         dataInicio: new Date(dataInicio),
         dataFim: new Date(dataFim),
-        adminId,
+        criadoPor: { connect: { id: adminId } },
         ...(consoleId ? { console: { connect: { id: consoleId } } } : {}),
         ...(midiaId ? { midia: { connect: { id: midiaId } } } : {}),
       },
@@ -100,14 +100,14 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params
-  const valida = leilaoSchema.safeParse(req.body)
+  const valida = leilaoSchema.omit({ adminId: true }).safeParse(req.body)
 
   if (!valida.success) {
     res.status(400).json({ erro: valida.error })
     return
   }
 
-  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, adminId } = valida.data
+  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim } = valida.data
 
   try {
     const leilaoItem = await prisma.leilao.update({
@@ -118,7 +118,6 @@ router.put('/:id', async (req, res) => {
         valorInicial,
         dataInicio: new Date(dataInicio),
         dataFim: new Date(dataFim),
-        adminId,
         ...(consoleId ? { console: { connect: { id: consoleId } } } : {}),
         ...(midiaId ? { midia: { connect: { id: midiaId } } } : {}),
       },

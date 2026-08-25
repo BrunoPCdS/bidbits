@@ -14,6 +14,7 @@ const midiaSchema = z.object({
     video: z.string().min(1, {message: 'Vídeo é obrigatório'}),
     descricaoDetalhada: z.string().optional(),
     tipo: z.enum(['Fita', 'DVD', 'CD']).default('Fita'),
+    adminId: z.number().int().positive(),
 });
 
 router.get('/', async (_req, res) => {
@@ -71,7 +72,7 @@ router.post('/', async (req, res) => {
         return;
     }
 
-    const { nome, marcaid, empresa, ano, foto, video, descricaoDetalhada, tipo } = valida.data;
+    const { nome, marcaid, empresa, ano, foto, video, descricaoDetalhada, tipo, adminId } = valida.data;
 
     try {
         const midiaItem = await prisma.midia.create({
@@ -84,7 +85,8 @@ router.post('/', async (req, res) => {
                 video,
                 descricao: descricaoDetalhada ?? '',
                 descricaoDetalhada,
-                tipo
+                tipo,
+                adminId,
             },
         });
 
@@ -97,7 +99,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
 
-    const valida = midiaSchema.partial().safeParse(req.body);
+    const valida = midiaSchema.omit({ adminId: true }).partial().safeParse(req.body);
 
     if (!valida.success) {
         res.status(400).json({ erro: valida.error });
@@ -128,7 +130,7 @@ router.delete('/:id', async (req, res) => {
     try {
         const midiaItem = await prisma.midia.update({
         where: { id: Number(id) },
-        data: { deletadoEm: new Date() },
+        data: { deletadoEm: new Date(), deletadoPorId: removidoPorId },
         });
 
     res.status(200).json(midiaItem);

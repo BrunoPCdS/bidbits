@@ -1,179 +1,142 @@
 generator client {
+  provider = "prisma-client"
 
-provider = "prisma-client"
-
-output = "../generated/prisma"
-
+  output = "../generated/prisma"
 }
-
-
 
 datasource db {
-
   provider = "postgresql"
-
 }
-
-
 
 model Marca {
-
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(30)
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(30)
   consoles Console[]
-  midias Midia[]
+  midias   Midia[]
 
   @@map("marcas")
-
 }
 
-
-
 model Console {
-
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(100) 
-  marcaid Int
-  marca Marca @relation(fields: [marcaid], references: [id])
-  empresa Empresa @default(Nintendo)
-  ano Int @db.SmallInt
-  foto String
-  video String
+  id        Int     @id @default(autoincrement())
+  nome      String  @db.VarChar(100)
+  marcaid   Int
+  marca     Marca   @relation(fields: [marcaid], references: [id])
+  empresa   Empresa @default(Nintendo)
+  ano       Int     @db.SmallInt
+  foto      String
+  video     String
   descricao String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
 
   // SOFT DELETE: Campos para saber quando foi deletado e por quem
-  deletadoEm DateTime?
+  deletadoEm    DateTime?
   deletadoPorId Int?
-  deletadoPor Admin? @relation("ConsoleDeletadoPor", fields: [deletadoPorId], references: [id])
+  deletadoPor   Admin?    @relation("ConsoleDeletadoPor", fields: [deletadoPorId], references: [id])
+
+  adminId   Int
+  criadoPor Admin @relation("ConsoleCriadoPor", fields: [adminId], references: [id])
 
   consolesLeiloes Leilao[]
 
-  // Registro de quem criou o item Console
-  adminId Int
-  criadoPor Admin @relation("ConsoleCriadoPor", fields: [adminId], references: [id])
-
   @@map("consoles") // Mudei de produtos para consoles para manter o padrão
-
 }
 
-
-
-model Midia { 
-
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(100) // Aumentado
+model Midia {
+  id        Int       @id @default(autoincrement())
+  nome      String    @db.VarChar(100) // Aumentado
   descricao String
-  foto String
-  ano Int @db.SmallInt
-  video String
-  tipo TipoMidia @default(Fita)
+  foto      String
+  ano       Int       @db.SmallInt
+  video     String
+  tipo      TipoMidia @default(Fita)
 
   descricaoDetalhada String?
 
   marcaid Int
-  marca Marca @relation(fields: [marcaid], references: [id])
+  marca   Marca   @relation(fields: [marcaid], references: [id])
   empresa Empresa @default(Nintendo)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
 
-
   // Registro de quem criou a Midia
-  adminId Int
+  adminId   Int
   criadoPor Admin @relation("MidiaCriadaPor", fields: [adminId], references: [id])
-
-
-  deletadoEm DateTime?
+  
+  deletadoEm    DateTime?
   deletadoPorId Int?
-  deletadoPor Admin? @relation("MidiaDeletadaPor", fields: [deletadoPorId], references: [id])
+  deletadoPor   Admin?    @relation("MidiaDeletadaPor", fields: [deletadoPorId], references: [id])
 
   midiasLeilao Leilao[]
 
   @@map("midias")
-
 }
 
-
-
 model Leilao {
+  id           Int    @id @default(autoincrement())
+  nome         String @db.VarChar(50)
+  descricao    String
+  valorInicial Float
 
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(50)
-  descricao String
-  valorInicial Float 
-
-  midiaId Int?
-  midia Midia? @relation(fields: [midiaId], references: [id])
+  midiaId   Int?
+  midia     Midia?   @relation(fields: [midiaId], references: [id])
   consoleId Int?
-  console Console? @relation(fields: [consoleId], references: [id])
+  console   Console? @relation(fields: [consoleId], references: [id])
 
   dataInicio DateTime
-  dataFim DateTime
+  dataFim    DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
 
-  adminId Int
+  adminId   Int
   criadoPor Admin @relation(fields: [adminId], references: [id])
-
 
   lances Lance[]
 
   @@map("leiloes")
-
 }
-
-
 
 // NOVA TABELA: Para registrar os lances dos clientes
 
 model Lance {
-
-  id Int @id @default(autoincrement())
-  valor Float // Valor ofertado no lance
+  id        Int      @id @default(autoincrement())
+  valor     Float // Valor ofertado no lance
   dataLance DateTime @default(now()) // Momento em que o lance foi feito
 
   usuarioId Int
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
 
   leilaoId Int
-  leilao Leilao @relation(fields: [leilaoId], references: [id])
+  leilao   Leilao @relation(fields: [leilaoId], references: [id])
 
   @@map("lances")
-
 }
 
-
-
 model Usuario {
-
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(50)
+  id    Int    @id @default(autoincrement())
+  nome  String @db.VarChar(50)
   email String @unique
   senha String
 
   lances Lance[]
 
   @@map("usuarios")
-
 }
 
-
-
 model Admin {
-
-  id Int @id @default(autoincrement())
-  nome String @db.VarChar(50)
+  id    Int    @id @default(autoincrement())
+  nome  String @db.VarChar(50)
   email String @unique
   senha String
 
-  consolesCriados Console[] @relation("ConsoleCriadoPor")
+  consolesCriados   Console[] @relation("ConsoleCriadoPor")
   consolesDeletados Console[] @relation("ConsoleDeletadoPor")
 
-  midiasCriadas Midia[] @relation("MidiaCriadaPor")
+  midiasCriadas   Midia[] @relation("MidiaCriadaPor")
   midiasDeletadas Midia[] @relation("MidiaDeletadaPor")
 
   leiloesCriados Leilao[]
@@ -181,20 +144,13 @@ model Admin {
   @@map("admins")
 }
 
-
-
 enum TipoMidia {
-
   Fita
   DVD
   CD
-
 }
 
-
-
 enum Empresa {
-
   Nintendo
   Sony
   Microsoft
@@ -202,5 +158,4 @@ enum Empresa {
   Atari
   Sega
   Tectoy
-
 }

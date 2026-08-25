@@ -15,6 +15,7 @@ const consoleSchema = z.object({
   foto: z.string().min(1, { message: "Foto é obrigatória" }),
   video: z.string().min(1, { message: "Vídeo é obrigatório" }),
   descricao: z.string().min(3, { message: "Descrição deve possuir, no mínimo, 3 caracteres" }),
+  adminId: z.number().int().positive(),
 })
 
 router.get("/", async (_req, res) => {
@@ -69,7 +70,7 @@ router.post("/", async (req, res) => {
     return
   }
 
-  const { nome, marcaid, empresa, ano, foto, video, descricao } = valida.data
+  const { nome, marcaid, empresa, ano, foto, video, descricao, adminId } = valida.data
 
   try {
     const consoleItem = await prisma.console.create({
@@ -80,7 +81,8 @@ router.post("/", async (req, res) => {
         ano,
         foto,
         video,
-        descricao
+        descricao,
+        adminId,
       },
     })
 
@@ -93,7 +95,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   const { id } = req.params
 
-  const valida = consoleSchema.safeParse(req.body)
+  const valida = consoleSchema.omit({ adminId: true }).safeParse(req.body)
 
   if (!valida.success) {
     res.status(400).json({ erro: valida.error })
