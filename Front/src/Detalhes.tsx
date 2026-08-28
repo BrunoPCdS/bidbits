@@ -29,7 +29,7 @@ export default function Detalhes() {
 
   return (
     <>
-      <section className="flex mt-6 mx-auto flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-5xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+      <section className="flex mt-20 mb-35 mx-auto flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-5xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
         <img className="object-cover w-full rounded-t-lg h-96 md:h-2/4 md:w-2/4 md:rounded-none md:rounded-s-lg"
           src={fotoItem} alt="Foto do item do leilão" />
         <div className="flex flex-col justify-between p-4 leading-normal">
@@ -37,7 +37,7 @@ export default function Detalhes() {
             {marcaItem} {nomeItem}
           </h5>
           <h5 className="mb-2 text-xl tracking-tight text-gray-900 dark:text-white">
-            Valor inicial: R$ {Number(leilao?.valorInicial ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Valor inicial: <span className="text-yellow-400">R$ {Number(leilao?.valorInicial ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
           </h5>
           <h5 className="mb-2 text-xl tracking-tight text-gray-900 dark:text-white">
             Ano: {leilao?.console?.ano ?? leilao?.midia?.ano ?? "-"}
@@ -45,13 +45,18 @@ export default function Detalhes() {
           <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
             {leilao?.descricao}
           </p>
+          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
+            Início do leilão: <span className="text-green-400">{new Date(leilao?.dataInicio ?? "").toLocaleDateString("pt-BR")}</span>
+          </p>
+          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
+            Fim do leilão: <span className="text-red-400">{new Date(leilao?.dataFim ?? "").toLocaleDateString("pt-BR")}</span>
+          </p>
           {videoItem && (
             <a
               href={videoItem}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-fit items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
-            >
+              className="inline-flex w-fit items-center px-3 py-2 text-sm font-medium text-center text-white">
               Ver vídeo
             </a>
           )}
