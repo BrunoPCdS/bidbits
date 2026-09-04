@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma"
 import { Router, type Request, type Response } from "express"
 import { z } from "zod"
+import jwt from "jsonwebtoken"
 
 const router = Router()
 
@@ -17,6 +18,35 @@ const usuarioPublico = {
     nome: true,
     email: true
 } as const
+
+const loginSchema = z.object({
+    email: z.email(),
+    senha: z.string().min(1)
+})
+
+router.post("/login", async (req: Request, res: Response) => {
+    const valida = loginSchema.safeParse(req.body)
+
+    if (!valida.success) {
+        res.status(400).json({ erro: "Email e senha são obrigatórios" })
+        return
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { email: valida.data.email } })
+
+    if (!usuario || usuario.senha !== valida.data.senha) {
+        res.status(401).json({ erro: "Email ou senha inválidos" })
+        return
+    }
+
+    const token = jwt.sign(
+        { usuarioId: usuario.id },
+        process.env.JWT_SECRET ?? "bidbits-segredo-desenvolvimento",
+        { expiresIn: "1d" }
+    )
+
+    res.status(200).json({ token, usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email } })
+})
 
 router.get("/", async (_req: Request, res: Response) => {
     try {

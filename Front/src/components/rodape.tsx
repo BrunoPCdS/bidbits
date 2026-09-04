@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom"
-
 export default function Rodape() {
     return (
     <footer className="bg-[#1d0014] text-white py-4" max-width="100%">

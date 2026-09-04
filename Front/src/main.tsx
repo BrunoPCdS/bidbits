@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 
 import App from './App.tsx'
-import Login from './Login.tsx'
+import Login from './utils/Login.tsx'
+import Cadastro from './utils/Cadastro.tsx'
 import Detalhes from './Detalhes.tsx'
 
 import Layout from './Layout.tsx'
@@ -16,6 +17,7 @@ const rotas = createBrowserRouter([
     children: [
       { index: true, element: <App /> },
       { path: 'login', element: <Login /> },
+      { path: 'register', element: <Cadastro /> },
       { path: 'detalhes/:leilaoId', element: <Detalhes /> },
     ],
   },
