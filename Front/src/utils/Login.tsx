@@ -30,6 +30,7 @@ export default function Login() {
 
             localStorage.setItem("token", dados.token)
             localStorage.setItem("usuario", JSON.stringify(dados.usuario))
+            window.dispatchEvent(new Event("sessao-alterada"))
             navigate("/")
         } catch {
             setErro("Não foi possível conectar ao servidor")
