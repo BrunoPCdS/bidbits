@@ -37,6 +37,7 @@ export default function Detalhes() {
   const [valorLance, setValorLance] = useState("")
   const [mensagem, setMensagem] = useState("")
   const [enviando, setEnviando] = useState(false)
+  const [abaAtiva, setAbaAtiva] = useState<"detalhes" | "ia">("detalhes")
 
   async function enviarLance(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault()
@@ -80,9 +81,53 @@ export default function Detalhes() {
           <h5 className="mb-2 text-xl tracking-tight text-gray-900 dark:text-white">
             Ano: {leilao?.console?.ano ?? leilao?.midia?.ano ?? "-"}
           </h5>
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-            {leilao?.descricao}
-          </p>
+          <div className="mb-4 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex gap-5" role="tablist" aria-label="Informações do leilão">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={abaAtiva === "detalhes"}
+                onClick={() => setAbaAtiva("detalhes")}
+                className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "detalhes" ? "border-yellow-500 text-gray-900" : "border-transparent text-gray-500"}`}
+              >
+                Detalhes
+              </button>
+              {leilao?.dadosIA && (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={abaAtiva === "ia"}
+                  onClick={() => setAbaAtiva("ia")}
+                  className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "ia" ? "border-yellow-500 text-gray-900" : "border-transparent text-gray-500"}`}
+                >
+                  Análise com IA
+                </button>
+              )}
+            </div>
+          </div>
+          {abaAtiva === "detalhes" && (
+            <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
+              {leilao?.descricao}
+            </p>
+          )}
+          {abaAtiva === "ia" && leilao?.dadosIA && (
+            <section className="mb-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-gray-700" role="tabpanel">
+              <p className="mb-3 font-semibold text-amber-900">Conteúdo gerado por inteligência artificial</p>
+              <p className="mb-4 text-xs text-amber-800">
+                As informações são estimativas e podem conter erros. Confirme os dados do item antes de tomar decisões no leilão.
+              </p>
+              <p className="mb-3">{leilao.dadosIA.descricao}</p>
+              <dl className="mb-3 grid gap-2 sm:grid-cols-3">
+                <div><dt className="font-semibold">Valor estimado</dt><dd>{leilao.dadosIA.valorEstimado}</dd></div>
+                <div><dt className="font-semibold">Raridade</dt><dd>{leilao.dadosIA.raridade}</dd></div>
+                <div><dt className="font-semibold">Unidades fabricadas</dt><dd>{leilao.dadosIA.unidadesFabricadas}</dd></div>
+              </dl>
+              <h6 className="mb-1 font-semibold">Pontos fortes</h6>
+              <ul className="list-disc pl-5">
+                {leilao.dadosIA.pontosFortes.map((ponto) => <li key={ponto}>{ponto}</li>)}
+              </ul>
+            </section>
+          )}
           <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
             Início do leilão: <span className="text-green-400">{new Date(leilao?.dataInicio ?? "").toLocaleDateString("pt-BR")}</span>
           </p>

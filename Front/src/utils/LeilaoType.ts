@@ -1,5 +1,13 @@
 import type { MarcaType } from "./MarcaType"
 
+export type DadosIAType = {
+  descricao: string
+  valorEstimado: string
+  raridade: string
+  unidadesFabricadas: string
+  pontosFortes: string[]
+}
+
 export type ConsoleType = {
   id: number
   nome: string
@@ -34,6 +42,7 @@ export type LeilaoType = {
   id: number
   nome: string
   descricao: string
+  dadosIA?: DadosIAType | null
   valorInicial: number
   dataInicio: string
   dataFim: string

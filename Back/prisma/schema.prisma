@@ -79,6 +79,7 @@ model Leilao {
   id           Int    @id @default(autoincrement())
   nome         String @db.VarChar(50)
   descricao    String
+  dadosIA      Json?
   valorInicial Float
 
   midiaId   Int?
