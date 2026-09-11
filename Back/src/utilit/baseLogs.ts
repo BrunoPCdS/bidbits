@@ -1,4 +1,14 @@
+import { prisma } from "../../lib/prisma"
 
-
-
-/* local para gerar logs de usuarios e administradores, para saber quem fez o que e quando */
+export async function registraLog(descricao: string, usuarioId?: number) {
+    try {
+        await prisma.log.create({
+            data: {
+                descricao,
+                ...(usuarioId === undefined ? {} : { usuarioId })
+            }
+        })
+    } catch (error) {
+        console.error("Erro ao criar log:", error)
+    }
+}
