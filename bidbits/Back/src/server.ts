@@ -11,8 +11,8 @@ import routesLances from './routes/lance'
 const app = express()
 const port = 3000
 
-app.use(express.json())
-app.use(cors())
+app.use(cors());
+app.use(express.json());
 
 app.use("/marcas", routesMarcas)
 app.use("/consoles", routesConsoles)
