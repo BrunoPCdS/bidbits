@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma"
 import {Router} from 'express';
 import {z} from 'zod';
+import { verificarAdmin } from "../utilit/verificarToken"
 
 const router = Router();
 
@@ -14,7 +15,7 @@ const midiaSchema = z.object({
     video: z.string().min(1, {message: 'Vídeo é obrigatório'}),
     descricaoDetalhada: z.string().optional(),
     tipo: z.enum(['Fita', 'DVD', 'CD']).default('Fita'),
-    adminId: z.number().int().positive(),
+    adminId: z.number().int().positive().optional(),
 });
 
 router.get('/', async (_req, res) => {
@@ -64,7 +65,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', verificarAdmin, async (req, res) => {
     const valida = midiaSchema.safeParse(req.body);
 
     if (!valida.success) {
@@ -72,7 +73,7 @@ router.post('/', async (req, res) => {
         return;
     }
 
-    const { nome, marcaid, empresa, ano, foto, video, descricaoDetalhada, tipo, adminId } = valida.data;
+    const { nome, marcaid, empresa, ano, foto, video, descricaoDetalhada, tipo } = valida.data;
 
     try {
         const midiaItem = await prisma.midia.create({
@@ -86,7 +87,7 @@ router.post('/', async (req, res) => {
                 descricao: descricaoDetalhada ?? '',
                 descricaoDetalhada,
                 tipo,
-                adminId,
+                adminId: req.adminId!,
             },
         });
 

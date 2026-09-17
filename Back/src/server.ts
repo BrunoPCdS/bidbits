@@ -7,6 +7,7 @@ import routesMidias from './routes/midias'
 import routesLeiloes from './routes/leilao'
 import routesClientes from './routes/cliente'
 import routesLances from './routes/lance'
+import routesAdministradores from './routes/administrador'
 
 const app = express()
 const port = 3000
@@ -28,6 +29,7 @@ app.use("/midias", routesMidias)
 app.use("/leiloes", routesLeiloes)
 app.use("/clientes", routesClientes)
 app.use("/lances", routesLances)
+app.use("/administradores", routesAdministradores)
 
 app.get('/', (req, res) => {
   res.send('API: Leilao de Games')

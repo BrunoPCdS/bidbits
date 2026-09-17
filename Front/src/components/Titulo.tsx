@@ -3,10 +3,12 @@ import { useEffect, useState } from "react"
 
 export default function Titulo() {
     const [logado, setLogado] = useState(Boolean(localStorage.getItem("token")))
+    const [admin, setAdmin] = useState(localStorage.getItem("perfil") === "admin")
 
     useEffect(() => {
         function atualizarSessao() {
             setLogado(Boolean(localStorage.getItem("token")))
+            setAdmin(localStorage.getItem("perfil") === "admin")
         }
 
         window.addEventListener("sessao-alterada", atualizarSessao)
@@ -21,6 +23,7 @@ export default function Titulo() {
     function sair() {
         localStorage.removeItem("token")
         localStorage.removeItem("usuario")
+        localStorage.removeItem("perfil")
         window.dispatchEvent(new Event("sessao-alterada"))
     }
 
@@ -57,11 +60,16 @@ export default function Titulo() {
                             </>
                         ) : (
                             <>
-                                <li>
+                                {admin && <li>
+                                    <Link to="/admin/painel" className="block py-2 px-3 md:p-0 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        Painel admin
+                                    </Link>
+                                </li>}
+                                {!admin && <li>
                                     <Link to="/meus-lances" className="block py-2 px-3 md:p-0 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
                                         Meus lances
                                     </Link>
-                                </li>
+                                </li>}
                                 <li>
                                     <button type="button" onClick={sair} className="block py-2 px-3 md:p-0 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
                                         Sair

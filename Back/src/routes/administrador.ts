@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma"
 import { Router, type Request, type Response } from "express"
 import { z } from "zod"
+import jwt from "jsonwebtoken"
 
 
 const router = Router()
@@ -16,11 +17,41 @@ const adminSchema = z.object({
 const adminPublico = {
     id: true,
     nome: true,
+    email: true,
 } as const
+
+const loginSchema = z.object({
+    email: z.email(),
+    senha: z.string().min(1),
+})
+
+router.post("/login", async (req: Request, res: Response) => {
+    const valida = loginSchema.safeParse(req.body)
+
+    if (!valida.success) {
+        res.status(400).json({ erro: "Email e senha são obrigatórios" })
+        return
+    }
+
+    const admin = await prisma.admin.findUnique({ where: { email: valida.data.email } })
+
+    if (!admin || admin.senha !== valida.data.senha) {
+        res.status(401).json({ erro: "Email ou senha de administrador inválidos" })
+        return
+    }
+
+    const token = jwt.sign(
+        { adminId: admin.id, perfil: "admin" },
+        process.env.JWT_SECRET ?? "bidbits-segredo-desenvolvimento",
+        { expiresIn: "1d" },
+    )
+
+    res.status(200).json({ token, admin: { id: admin.id, nome: admin.nome, email: admin.email } })
+})
 
 router.get("/", async (_req: Request, res: Response) => {
     try {
-        const admins = await prisma.usuario.findMany({
+        const admins = await prisma.admin.findMany({
             select: adminPublico,
             orderBy: { id: "asc" }
         })
@@ -40,15 +71,12 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 
     try {
-        const admin = await prisma.usuario.findUnique({
+        const admin = await prisma.admin.findUnique({
             where: { id },
             select: {
                 ...adminPublico,
-                lances: {
-                    include: {
-                        leilao: true
-                    },
-                    orderBy: { dataLance: "desc" }
+                leiloesCriados: {
+                    orderBy: { id: "desc" }
                 }
             }
         })
@@ -75,8 +103,9 @@ router.post("/", async (req: Request, res: Response) => {
     const { nome, email, senha } = valida.data
 
     try {
-        const admin = await prisma.usuario.create({
-            data: { nome, email, senha }
+        const admin = await prisma.admin.create({
+            data: { nome, email, senha },
+            select: adminPublico
         })
 
         res.status(201).json(admin)
@@ -101,7 +130,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     try {
-        const admin = await prisma.usuario.update({
+        const admin = await prisma.admin.update({
             where: { id },
             data: valida.data,
             select: adminPublico

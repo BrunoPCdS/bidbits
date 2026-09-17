@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma"
 
 import { Router } from "express"
 import { z } from "zod"
+import { verificarAdmin } from "../utilit/verificarToken"
 
 const router = Router()
 
@@ -15,7 +16,7 @@ const consoleSchema = z.object({
   foto: z.string().min(1, { message: "Foto é obrigatória" }),
   video: z.string().min(1, { message: "Vídeo é obrigatório" }),
   descricao: z.string().min(3, { message: "Descrição deve possuir, no mínimo, 3 caracteres" }),
-  adminId: z.number().int().positive(),
+  adminId: z.number().int().positive().optional(),
 })
 
 router.get("/", async (_req, res) => {
@@ -62,7 +63,7 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-router.post("/", async (req, res) => {
+router.post("/", verificarAdmin, async (req, res) => {
   const valida = consoleSchema.safeParse(req.body)
 
   if (!valida.success) {
@@ -70,7 +71,7 @@ router.post("/", async (req, res) => {
     return
   }
 
-  const { nome, marcaid, empresa, ano, foto, video, descricao, adminId } = valida.data
+  const { nome, marcaid, empresa, ano, foto, video, descricao } = valida.data
 
   try {
     const consoleItem = await prisma.console.create({
@@ -82,7 +83,7 @@ router.post("/", async (req, res) => {
         foto,
         video,
         descricao,
-        adminId,
+        adminId: req.adminId!,
       },
     })
 

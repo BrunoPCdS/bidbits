@@ -106,6 +106,23 @@ Execute em desenvolvimento:
 npm run dev
 ```
 
+### Acesso administrativo
+
+Crie o primeiro administrador diretamente na API (ou pelo Insomnia):
+
+```http
+POST http://localhost:3000/administradores
+Content-Type: application/json
+
+{
+  "nome": "Administrador",
+  "email": "admin@bidbits.com",
+  "senha": "senha-segura-123"
+}
+```
+
+Depois, abra `http://localhost:5173/admin`, entre com esse e-mail e senha e use o painel para cadastrar consoles, midias e leiloes. O backend valida o token de administrador e ignora qualquer `adminId` enviado pelo navegador.
+
 ## Rotas do backend
 
 ### Rotas ativas no servidor (`Back/src/server.ts`)
@@ -113,6 +130,10 @@ npm run dev
 - `GET /` -> mensagem "API: Leilao de Games"
 - `/marcas` -> modulo de marcas (rotas implementadas)
 - `/consoles` -> modulo de consoles (rotas implementadas)
+- `/administradores/login` -> login de administrador
+- `/administradores` -> cadastro e consulta de administradores
+- `/midias` -> cadastro e consulta de midias
+- `/leiloes` -> cadastro e consulta de leiloes
 
 ### Rotas implementadas: Marcas (`Back/src/routes/marcas.ts`)
 
@@ -162,15 +183,7 @@ Valores aceitos em `empresa`:
 - `Sega`
 - `Tectoy`
 
-### Rotas existentes no projeto, mas ainda sem implementacao
-
-Arquivos de rota presentes e vazios no momento:
-
-- `Back/src/routes/administrador.ts`
-- `Back/src/routes/cliente.ts`
-- `Back/src/routes/leilao.ts`
-- `Back/src/routes/lance.ts`
-- `Back/src/routes/midias.ts`
+As rotas `POST /consoles`, `POST /midias` e `POST /leiloes` exigem `Authorization: Bearer <token-do-admin>`.
 
 ## Banco de dados (Prisma)
 

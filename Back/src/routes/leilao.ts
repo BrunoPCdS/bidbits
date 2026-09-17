@@ -3,6 +3,7 @@ import { consultarDadosComIA } from "../../iaServices"
 
 import { Router } from 'express'
 import { z } from 'zod'
+import { verificarAdmin } from "../utilit/verificarToken"
 
 const router = Router()
 
@@ -14,7 +15,7 @@ const leilaoSchema = z.object({
   midiaId: z.number().int().positive().nullable().optional(),
   dataInicio: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de início inválida" }),
   dataFim: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de fim inválida" }),
-  adminId: z.number().int().positive(),
+  adminId: z.number().int().positive().optional(),
   gerarDescricaoComIA: z.boolean().optional().default(false),
 }).refine((data) => Boolean(data.consoleId || data.midiaId), {
   message: "Informe pelo menos um consoleId ou midiaId",
@@ -88,7 +89,7 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', verificarAdmin, async (req, res) => {
   const valida = leilaoSchema.safeParse(req.body)
 
   if (!valida.success) {
@@ -96,7 +97,7 @@ router.post('/', async (req, res) => {
     return
   }
 
-  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, adminId, gerarDescricaoComIA } = valida.data
+  const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, gerarDescricaoComIA } = valida.data
 
   try {
     let descricaoFinal = descricao
@@ -136,7 +137,7 @@ router.post('/', async (req, res) => {
         valorInicial,
         dataInicio: new Date(dataInicio),
         dataFim: new Date(dataFim),
-        criadoPor: { connect: { id: adminId } },
+        criadoPor: { connect: { id: req.adminId! } },
         ...(consoleId ? { console: { connect: { id: consoleId } } } : {}),
         ...(midiaId ? { midia: { connect: { id: midiaId } } } : {}),
       },

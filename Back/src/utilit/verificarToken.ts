@@ -9,6 +9,7 @@ declare global {
 	namespace Express {
 		interface Request {
 			usuarioId?: number
+			adminId?: number
 		}
 	}
 }
@@ -31,6 +32,30 @@ export function verificarToken(req: Request, res: Response, next: NextFunction) 
 		}
 
 		req.usuarioId = payload.usuarioId
+		next()
+	} catch {
+		res.status(401).json({ erro: "Token inválido ou expirado" })
+	}
+}
+
+export function verificarAdmin(req: Request, res: Response, next: NextFunction) {
+	const autorizacao = req.headers.authorization
+	const token = autorizacao?.startsWith("Bearer ") ? autorizacao.slice(7) : undefined
+
+	if (!token) {
+		res.status(401).json({ erro: "Faça login como administrador para continuar" })
+		return
+	}
+
+	try {
+		const payload = jwt.verify(token, segredo)
+
+		if (typeof payload !== "object" || payload.perfil !== "admin" || typeof payload.adminId !== "number") {
+			res.status(403).json({ erro: "Acesso restrito a administradores" })
+			return
+		}
+
+		req.adminId = payload.adminId
 		next()
 	} catch {
 		res.status(401).json({ erro: "Token inválido ou expirado" })
