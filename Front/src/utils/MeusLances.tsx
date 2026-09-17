@@ -5,6 +5,7 @@ type Lance = {
     id: number
     valor: number
     dataLance: string
+    venceu: boolean
     leilao: {
         id: number
         nome: string
@@ -63,6 +64,11 @@ export default function MeusLances() {
                         <p className="text-sm text-gray-600">
                             Data: {new Date(lance.dataLance).toLocaleString("pt-BR")}
                         </p>
+                        {lance.venceu && (
+                            <p className="font-bold text-green-600">
+                                Parabéns, você arrematou!
+                            </p>
+                        )}
                     </article>
                 ))}
             </div>

@@ -74,12 +74,19 @@ router.get("/:id", async (req: Request, res: Response) => {
             where: { id },
             select: {
                 ...usuarioPublico,
-                lances: {
-                    include: {
-                        leilao: true
-                    },
-                    orderBy: { dataLance: "desc" }
-                }
+            lances: {
+                include: {
+                    leilao: {
+                        include: {
+                            lances: {
+                                orderBy: { valor: "desc" },
+                                take: 1
+                            }
+                        }
+                    }
+                },
+                orderBy: { dataLance: "desc" }
+            }
             }
         })
 
@@ -88,7 +95,23 @@ router.get("/:id", async (req: Request, res: Response) => {
             return
         }
 
-        res.status(200).json(cliente)
+        const lancesComResultado = cliente.lances.map((lance) => ({
+            id: lance.id,
+            valor: lance.valor,
+            dataLance: lance.dataLance,
+            leilao: {
+                id: lance.leilao.id,
+                nome: lance.leilao.nome
+            },
+            venceu:
+                new Date() >= lance.leilao.dataFim &&
+                lance.leilao.lances[0]?.id === lance.id
+        }))
+
+        res.status(200).json({
+            ...cliente,
+            lances: lancesComResultado
+        })
     } catch (error) {
         res.status(500).json({ erro: error })
     }
