@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import type { ConsoleType, MidiaType } from "./LeilaoType"
+import type { ConsoleType, LeilaoType, MidiaType } from "./LeilaoType"
 
 const apiUrl = import.meta.env.VITE_API_URL
 const token = () => localStorage.getItem("token")
@@ -22,6 +22,7 @@ export default function AdminPainel() {
     const navigate = useNavigate()
     const [consoles, setConsoles] = useState<ConsoleType[]>([])
     const [midias, setMidias] = useState<MidiaType[]>([])
+    const [leiloes, setLeiloes] = useState<LeilaoType[]>([])
     const [mensagem, setMensagem] = useState("")
     const [erro, setErro] = useState("")
     const [consoleForm, setConsoleForm] = useState(itemInicial)
@@ -38,9 +39,11 @@ export default function AdminPainel() {
         Promise.all([
             fetch(`${apiUrl}/consoles`).then((resposta) => resposta.json()),
             fetch(`${apiUrl}/midias`).then((resposta) => resposta.json()),
-        ]).then(([consolesDados, midiasDados]) => {
+            fetch(`${apiUrl}/leiloes`).then((resposta) => resposta.json()),
+        ]).then(([consolesDados, midiasDados, leiloesDados]) => {
             setConsoles(consolesDados)
             setMidias(midiasDados)
+            setLeiloes(leiloesDados)
         }).catch(() => setErro("Não foi possível carregar os itens cadastrados"))
     }, [navigate])
 
@@ -51,6 +54,8 @@ export default function AdminPainel() {
         ])
         setConsoles(consolesDados)
         setMidias(midiasDados)
+        const leiloesDados = await fetch(`${apiUrl}/leiloes`).then((resposta) => resposta.json())
+        setLeiloes(leiloesDados)
     }
 
     async function enviar(endpoint: string, body: object, sucesso: string) {
@@ -190,10 +195,40 @@ export default function AdminPainel() {
         setMidiaForm(itemInicial)
     }
 
+    async function excluirLeilao(id: number) {
+        if (!window.confirm("Deseja excluir este leilão? Os lances associados também serão removidos.")) return
+
+        try {
+            const resposta = await fetch(`${apiUrl}/leiloes/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token()}` },
+            })
+            const dados = await resposta.json()
+            if (!resposta.ok) throw new Error(dados.erro ?? "Não foi possível excluir o leilão")
+            setMensagem("Leilão excluído")
+            await atualizarItens()
+        } catch (error) { setErro(error instanceof Error ? error.message : "Falha ao excluir leilão") }
+    }
+
+    async function gerarIADoLeilao(id: number) {
+        setErro("")
+        setMensagem("")
+        try {
+            const resposta = await fetch(`${apiUrl}/leiloes/${id}/gerar-ia`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token()}` },
+            })
+            const dados = await resposta.json()
+            if (!resposta.ok) throw new Error(dados.erro ?? "Não foi possível gerar os detalhes com IA")
+            setMensagem("Detalhes gerados com IA")
+            await atualizarItens()
+        } catch (error) { setErro(error instanceof Error ? error.message : "Falha ao gerar detalhes com IA") }
+    }
+
     async function cadastrarLeilao(evento: FormEvent) {
         evento.preventDefault()
         try {
-            await enviar("leiloes", { ...leilao, valorInicial: Number(leilao.valorInicial), consoleId: leilao.consoleId ? Number(leilao.consoleId) : null, midiaId: leilao.midiaId ? Number(leilao.midiaId) : null, gerarDescricaoComIA: false }, "Leilão cadastrado")
+            await enviar("leiloes", { ...leilao, valorInicial: Number(leilao.valorInicial), consoleId: leilao.consoleId ? Number(leilao.consoleId) : null, midiaId: leilao.midiaId ? Number(leilao.midiaId) : null, gerarDescricaoComIA: true }, "Leilão cadastrado")
             setLeilao({ nome: "", descricao: "", valorInicial: "", dataInicio: "", dataFim: "", consoleId: "", midiaId: "" })
         } catch (error) { setErro(error instanceof Error ? error.message : "Falha ao cadastrar leilão") }
     }
@@ -217,6 +252,7 @@ export default function AdminPainel() {
             <form onSubmit={cadastrarMidia} className="p-6 border rounded-lg shadow"><h2 className="mb-4 text-xl font-semibold">{midiaEditandoId ? "Alterar mídia" : "Nova mídia"}</h2><div className="grid gap-3">{camposItem(midiaForm, setMidiaForm, true)}<div className="flex gap-2"><button className="px-4 py-2 text-white bg-[#1d0014] rounded">{midiaEditandoId ? "Salvar alteração" : "Cadastrar mídia"}</button>{midiaEditandoId && <button type="button" onClick={cancelarEdicaoMidia} className="px-4 py-2 border rounded">Cancelar</button>}</div></div></form>
             <form onSubmit={cadastrarLeilao} className="p-6 border rounded-lg shadow lg:col-span-2"><h2 className="mb-4 text-xl font-semibold">Novo leilão</h2><div className="grid gap-3 md:grid-cols-2"><input required placeholder="Nome do leilão" value={leilao.nome} onChange={(e) => setLeilao({ ...leilao, nome: e.target.value })} className="p-2 border rounded" /><input required type="number" step="0.01" placeholder="Valor inicial" value={leilao.valorInicial} onChange={(e) => setLeilao({ ...leilao, valorInicial: e.target.value })} className="p-2 border rounded" /><textarea required placeholder="Descrição" value={leilao.descricao} onChange={(e) => setLeilao({ ...leilao, descricao: e.target.value })} className="p-2 border rounded md:col-span-2" /><input required type="datetime-local" value={leilao.dataInicio} onChange={(e) => setLeilao({ ...leilao, dataInicio: e.target.value })} className="p-2 border rounded" /><input required type="datetime-local" value={leilao.dataFim} onChange={(e) => setLeilao({ ...leilao, dataFim: e.target.value })} className="p-2 border rounded" /><select value={leilao.consoleId} onChange={(e) => setLeilao({ ...leilao, consoleId: e.target.value, midiaId: "" })} className="p-2 border rounded"><option value="">Selecionar console (opcional)</option>{consoles.map((item) => <option key={item.id} value={item.id}>#{item.id} - {item.nome}{item.marca ? ` (${item.marca.nome})` : ""}</option>)}</select><select value={leilao.midiaId} onChange={(e) => setLeilao({ ...leilao, midiaId: e.target.value, consoleId: "" })} className="p-2 border rounded"><option value="">Selecionar mídia (opcional)</option>{midias.map((item) => <option key={item.id} value={item.id}>#{item.id} - {item.nome}{item.marca ? ` (${item.marca.nome})` : ""}</option>)}</select><button className="px-4 py-2 text-white bg-[#1d0014] rounded md:col-span-2">Cadastrar leilão</button></div></form>
         </div>
+        <section className="mt-8 p-6 border rounded-lg shadow"><h2 className="mb-4 text-xl font-semibold">Leilões cadastrados</h2>{leiloes.length === 0 ? <p className="text-gray-600">Nenhum leilão cadastrado.</p> : <div className="grid gap-4 md:grid-cols-2">{leiloes.map((leilaoItem) => <article key={leilaoItem.id} className="flex items-center justify-between gap-4 border rounded p-4"><div className="min-w-0"><h3 className="font-bold">{leilaoItem.nome}</h3><p className="text-sm text-gray-600">Encerra em {new Date(leilaoItem.dataFim).toLocaleString("pt-BR")}</p></div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => gerarIADoLeilao(leilaoItem.id)} className="px-3 py-1 text-sm text-white bg-[#1d0014] rounded">Gerar IA</button><button type="button" onClick={() => excluirLeilao(leilaoItem.id)} className="px-3 py-1 text-sm text-red-700 border border-red-300 rounded">Excluir</button></div></article>)}</div>}</section>
         <section className="mt-8 p-6 border rounded-lg shadow"><h2 className="mb-4 text-xl font-semibold">Consoles cadastrados</h2>{consoles.length === 0 ? <p className="text-gray-600">Nenhum console cadastrado.</p> : <div className="grid gap-4 md:grid-cols-2">{consoles.map((consoleItem) => <article key={consoleItem.id} className="flex gap-4 border rounded p-4"><img src={consoleItem.foto} alt={consoleItem.nome} className="h-24 w-24 rounded object-cover" /><div className="min-w-0 flex-1"><h3 className="font-bold">{consoleItem.nome}</h3><p className="text-sm text-gray-600">{consoleItem.marca?.nome ?? "Marca não informada"} | {consoleItem.empresa} | {consoleItem.ano}</p><div className="mt-3 flex gap-2"><button type="button" onClick={() => editarConsole(consoleItem)} className="px-3 py-1 text-sm text-white bg-[#1d0014] rounded">Alterar</button><button type="button" onClick={() => excluirConsole(consoleItem.id)} className="px-3 py-1 text-sm text-red-700 border border-red-300 rounded">Excluir</button></div></div></article>)}</div>}</section>
         <section className="mt-8 p-6 border rounded-lg shadow"><h2 className="mb-4 text-xl font-semibold">Mídias cadastradas</h2>{midias.length === 0 ? <p className="text-gray-600">Nenhuma mídia cadastrada.</p> : <div className="grid gap-4 md:grid-cols-2">{midias.map((midia) => <article key={midia.id} className="flex gap-4 border rounded p-4"><img src={midia.foto} alt={midia.nome} className="h-24 w-24 rounded object-cover" /><div className="min-w-0 flex-1"><h3 className="font-bold">{midia.nome}</h3><p className="text-sm text-gray-600">{midia.marca?.nome ?? "Marca não informada"} | {midia.tipo} | {midia.ano}</p><div className="mt-3 flex gap-2"><button type="button" onClick={() => editarMidia(midia)} className="px-3 py-1 text-sm text-white bg-[#1d0014] rounded">Alterar</button><button type="button" onClick={() => excluirMidia(midia.id)} className="px-3 py-1 text-sm text-red-700 border border-red-300 rounded">Excluir</button></div></div></article>)}</div>}</section>
     </main>

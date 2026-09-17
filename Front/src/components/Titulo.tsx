@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 
 export default function Titulo() {
+    const navigate = useNavigate()
     const [logado, setLogado] = useState(Boolean(localStorage.getItem("token")))
     const [admin, setAdmin] = useState(localStorage.getItem("perfil") === "admin")
 
@@ -25,6 +26,7 @@ export default function Titulo() {
         localStorage.removeItem("usuario")
         localStorage.removeItem("perfil")
         window.dispatchEvent(new Event("sessao-alterada"))
+        navigate("/")
     }
 
     return (

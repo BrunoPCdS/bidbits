@@ -16,7 +16,7 @@ const leilaoSchema = z.object({
   dataInicio: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de início inválida" }),
   dataFim: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data de fim inválida" }),
   adminId: z.number().int().positive().optional(),
-  gerarDescricaoComIA: z.boolean().optional().default(false),
+  gerarDescricaoComIA: z.boolean().optional().default(true),
 }).refine((data) => Boolean(data.consoleId || data.midiaId), {
   message: "Informe pelo menos um consoleId ou midiaId",
   path: ["consoleId"],
@@ -86,6 +86,48 @@ router.get('/:id', async (req, res) => {
     res.status(200).json(leilaoItem)
   } catch (error) {
     res.status(500).json({ erro: error })
+  }
+})
+
+router.post('/:id/gerar-ia', verificarAdmin, async (req, res) => {
+  const id = Number(req.params.id)
+
+  try {
+    const leilaoItem = await prisma.leilao.findUnique({
+      where: { id },
+      include: {
+        console: { include: { marca: true } },
+        midia: { include: { marca: true } },
+      },
+    })
+
+    if (!leilaoItem) {
+      res.status(404).json({ erro: "Leilão não encontrado" })
+      return
+    }
+
+    const item = leilaoItem.console ?? leilaoItem.midia
+    if (!item) {
+      res.status(400).json({ erro: "O leilão não possui console ou mídia associado" })
+      return
+    }
+
+    const dadosIA = await consultarDadosComIA({
+      nome: item.nome,
+      ano: item.ano,
+      marca: item.marca.nome,
+      tipo: "tipo" in item ? String(item.tipo) : "console",
+    })
+
+    const atualizado = await prisma.leilao.update({
+      where: { id },
+      data: { descricao: dadosIA.descricao, dadosIA },
+    })
+
+    res.status(200).json(atualizado)
+  } catch (error) {
+    const mensagem = error instanceof Error ? error.message : "Falha ao gerar detalhes com IA"
+    res.status(502).json({ erro: mensagem })
   }
 })
 
@@ -188,12 +230,15 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verificarAdmin, async (req, res) => {
   const { id } = req.params
 
   try {
-    const leilaoItem = await prisma.leilao.delete({
-      where: { id: Number(id) },
+    const leilaoItem = await prisma.$transaction(async (transacao) => {
+      await transacao.lance.deleteMany({ where: { leilaoId: Number(id) } })
+      return transacao.leilao.delete({
+        where: { id: Number(id) },
+      })
     })
 
     res.status(200).json(leilaoItem)
