@@ -7,6 +7,7 @@ export function CardLeilao({ data }: { data: LeilaoType }) {
     const fotoItem = item?.foto ?? ""
     const marcaItem = item?.marca?.nome ?? "Marca"
     const tipoItem = data.console ? "Console" : data.midia ? "Mídia" : "Item"
+    const encerrado = new Date() > new Date(data.dataFim)
 
     return (
         <div className="max-w-sm mb-8 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -24,6 +25,11 @@ export function CardLeilao({ data }: { data: LeilaoType }) {
                 <p className="mb-4 line-clamp-3 text-sm text-gray-700 dark:text-gray-400">
                     {data.descricao}
                 </p>
+                {encerrado && (
+                    <p className="mb-4 font-bold text-red-500 dark:text-red-400">
+                        Leilão encerrado
+                    </p>
+                )}
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                     Início do leilão: <span className="text-green-400">{new Date(data.dataInicio).toLocaleDateString("pt-BR")}</span>
                 </p>
