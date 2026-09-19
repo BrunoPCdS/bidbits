@@ -78,9 +78,9 @@ router.get("/:id", async (req: Request, res: Response) => {
                 include: {
                     leilao: {
                         include: {
+                            // Todos os lances permitem comparar o lance atual com outros usuarios.
                             lances: {
-                                orderBy: { valor: "desc" },
-                                take: 1
+                                orderBy: { valor: "desc" }
                             }
                         }
                     }
@@ -95,10 +95,15 @@ router.get("/:id", async (req: Request, res: Response) => {
             return
         }
 
+        // Informa ao painel se outro usuario fez um lance maior.
         const lancesComResultado = cliente.lances.map((lance) => ({
             id: lance.id,
             valor: lance.valor,
             dataLance: lance.dataLance,
+            maiorLance: lance.leilao.lances[0]?.valor ?? 0,
+            superado: lance.leilao.lances.some(
+                (outroLance) => outroLance.usuarioId !== id && outroLance.valor > lance.valor
+            ),
             leilao: {
                 id: lance.leilao.id,
                 nome: lance.leilao.nome

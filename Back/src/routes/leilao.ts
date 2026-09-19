@@ -50,6 +50,11 @@ router.get('/', async (_req, res) => {
       include: {
         console: true,
         midia: true,
+        // Carrega somente o maior lance para calcular o valor final do leilao.
+        lances: {
+          orderBy: { valor: 'desc' },
+          take: 1,
+        },
         criadoPor: {
           select: { id: true, nome: true, email: true },
         },
@@ -57,7 +62,13 @@ router.get('/', async (_req, res) => {
       orderBy: { id: 'desc' },
     })
 
-    res.status(200).json(leiloes)
+    // O valor final e o maior lance; sem lances, o valor inicial e mantido.
+    const leiloesComValorFinal = leiloes.map((leilao) => ({
+      ...leilao,
+      valorFinal: leilao.lances[0]?.valor ?? leilao.valorInicial,
+    }))
+
+    res.status(200).json(leiloesComValorFinal)
   } catch (error) {
     res.status(500).json({ erro: error })
   }

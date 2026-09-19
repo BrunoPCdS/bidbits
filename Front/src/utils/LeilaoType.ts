@@ -44,6 +44,8 @@ export type LeilaoType = {
   descricao: string
   dadosIA?: DadosIAType | null
   valorInicial: number
+  // Valor final retornado pela API com base no maior lance do leilao.
+  valorFinal?: number
   dataInicio: string
   dataFim: string
   consoleId?: number | null

@@ -16,9 +16,18 @@ export function CardLeilao({ data }: { data: LeilaoType }) {
                 <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {nomeItem}
                 </h5>
-                <p className="mb-3 font-extrabold text-gray-700 dark:text-gray-400">
-                    Valor inicial: <span className="text-yellow-500">R$ {Number(data.valorInicial).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </p>
+                {!encerrado && (
+                    <>
+                        <p className="mb-3 font-extrabold text-gray-700 dark:text-gray-400">
+                        valor inicial: <span className="text-yellow-500">R$ {Number(data.valorInicial).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </p>
+                    </>)}
+                {encerrado && (
+                    <>
+                        <p className="mb-3 font-extrabold text-gray-700 dark:text-gray-400">
+                        Foi Arrematado por: <span className="text-yellow-500">R$ {Number(data.valorFinal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </p>
+                    </>)}
                 <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
                     {tipoItem} • <span className="text-yellow-500">{data.console?.ano ?? data.midia?.ano ?? "Ano indisponível"}</span>
                 </p>
