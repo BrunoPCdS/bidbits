@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import type { ConsoleType, LeilaoType, MidiaType } from "./LeilaoType"
+import type { MarcaType } from "./MarcaType"
 
 const apiUrl = import.meta.env.VITE_API_URL
 const token = () => localStorage.getItem("token")
@@ -22,6 +23,7 @@ export default function AdminPainel() {
     const navigate = useNavigate()
     const [consoles, setConsoles] = useState<ConsoleType[]>([])
     const [midias, setMidias] = useState<MidiaType[]>([])
+    const [marcas, setMarcas] = useState<MarcaType[]>([])
     const [leiloes, setLeiloes] = useState<LeilaoType[]>([])
     const [mensagem, setMensagem] = useState("")
     const [erro, setErro] = useState("")
@@ -40,10 +42,12 @@ export default function AdminPainel() {
             fetch(`${apiUrl}/consoles`).then((resposta) => resposta.json()),
             fetch(`${apiUrl}/midias`).then((resposta) => resposta.json()),
             fetch(`${apiUrl}/leiloes`).then((resposta) => resposta.json()),
-        ]).then(([consolesDados, midiasDados, leiloesDados]) => {
+            fetch(`${apiUrl}/marcas`).then((resposta) => resposta.json()),
+        ]).then(([consolesDados, midiasDados, leiloesDados, marcasDados]) => {
             setConsoles(consolesDados)
             setMidias(midiasDados)
             setLeiloes(leiloesDados)
+            setMarcas(marcasDados)
         }).catch(() => setErro("Não foi possível carregar os itens cadastrados"))
     }, [navigate])
 
@@ -67,7 +71,10 @@ export default function AdminPainel() {
             body: JSON.stringify(body),
         })
         const dados = await resposta.json()
-        if (!resposta.ok) throw new Error(dados.erro?.issues?.[0]?.message ?? dados.erro ?? "Não foi possível salvar")
+        if (!resposta.ok) {
+            const mensagemErro = dados.erro?.issues?.[0]?.message ?? (typeof dados.erro === "string" ? dados.erro : "Não foi possível salvar")
+            throw new Error(mensagemErro)
+        }
         setMensagem(sucesso)
     }
 
@@ -82,7 +89,10 @@ export default function AdminPainel() {
                     body: JSON.stringify(corpo),
                 })
                 const dados = await resposta.json()
-                if (!resposta.ok) throw new Error(dados.erro?.issues?.[0]?.message ?? dados.erro ?? "Não foi possível alterar")
+                if (!resposta.ok) {
+                    const mensagemErro = dados.erro?.issues?.[0]?.message ?? (typeof dados.erro === "string" ? dados.erro : "Não foi possível alterar")
+                    throw new Error(mensagemErro)
+                }
                 setMensagem("Console alterado")
             } else {
                 await enviar("consoles", corpo, "Console cadastrado")
@@ -144,7 +154,10 @@ export default function AdminPainel() {
                     body: JSON.stringify(corpo),
                 })
                 const dados = await resposta.json()
-                if (!resposta.ok) throw new Error(dados.erro?.issues?.[0]?.message ?? dados.erro ?? "Não foi possível alterar")
+                if (!resposta.ok) {
+                    const mensagemErro = dados.erro?.issues?.[0]?.message ?? (typeof dados.erro === "string" ? dados.erro : "Não foi possível alterar")
+                    throw new Error(mensagemErro)
+                }
                 setMensagem("Mídia alterada")
             } else {
                 await enviar("midias", corpo, "Mídia cadastrada")
@@ -236,10 +249,11 @@ export default function AdminPainel() {
     function camposItem(formulario: ItemForm, setFormulario: (valor: ItemForm) => void, midia = false) {
         return <>
             <input required placeholder="Nome" value={formulario.nome} onChange={(e) => setFormulario({ ...formulario, nome: e.target.value })} className="p-2 border rounded" />
+            <label className="grid gap-1"><span className="text-sm text-gray-600">Marca</span><select required value={formulario.marcaid} onChange={(e) => setFormulario({ ...formulario, marcaid: e.target.value })} className="p-2 border rounded"><option value="">Selecionar marca</option>{marcas.map((marca) => <option key={marca.id} value={marca.id}>{marca.nome}</option>)}</select></label>
             <input required type="number" placeholder="Ano" value={formulario.ano} onChange={(e) => setFormulario({ ...formulario, ano: e.target.value })} className="p-2 border rounded" />
             <input required placeholder="URL da foto" value={formulario.foto} onChange={(e) => setFormulario({ ...formulario, foto: e.target.value })} className="p-2 border rounded" />
             <input required placeholder="URL do vídeo" value={formulario.video} onChange={(e) => setFormulario({ ...formulario, video: e.target.value })} className="p-2 border rounded" />
-            <select value={formulario.empresa} onChange={(e) => setFormulario({ ...formulario, empresa: e.target.value })} className="p-2 border rounded"><option>Nintendo</option><option>Sony</option><option>Microsoft</option><option>Xbox</option><option>Atari</option><option>Sega</option><option>Tectoy</option></select>
+            <label className="grid gap-1"><span className="text-sm text-gray-600">Empresa/fabricante</span><select value={formulario.empresa} onChange={(e) => setFormulario({ ...formulario, empresa: e.target.value })} className="p-2 border rounded"><option>Nintendo</option><option>Sony</option><option>Microsoft</option><option>Xbox</option><option>Atari</option><option>Sega</option><option>Tectoy</option></select></label>
             {midia && <select value={formulario.tipo} onChange={(e) => setFormulario({ ...formulario, tipo: e.target.value })} className="p-2 border rounded"><option>Fita</option><option>DVD</option><option>CD</option></select>}
             <textarea required={!midia} placeholder={midia ? "Descrição detalhada (opcional)" : "Descrição"} value={formulario.descricao} onChange={(e) => setFormulario({ ...formulario, descricao: e.target.value })} className="p-2 border rounded md:col-span-2" />
         </>
