@@ -175,6 +175,9 @@ router.post('/', verificarAdmin, async (req, res) => {
       },
     })
 
+    // A descrição automática é gerada em segundo plano: o leilão já foi salvo
+    // e a resposta é enviada sem aguardar a Gemini. Quando a IA terminar, os
+    // dados retornados são gravados no mesmo leilão pelo update abaixo.
     if (gerarDescricaoComIA) {
       void (async () => {
         try {

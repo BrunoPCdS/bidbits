@@ -68,27 +68,27 @@ export default function Detalhes() {
 
   return (
     <>
-      <section className="flex mt-20 mb-35 mx-auto flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-5xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+      <section className="flex mt-20 mb-35 mx-auto flex-col items-center rounded-lg border border-slate-600 bg-slate-700 text-white shadow md:flex-row md:max-w-5xl">
         <img className="object-cover w-full rounded-t-lg h-96 md:h-2/4 md:w-2/4 md:rounded-none md:rounded-s-lg"
           src={fotoItem} alt="Foto do item do leilão" />
         <div className="flex flex-col justify-between p-4 leading-normal">
-          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h5 className="mb-2 text-2xl font-bold tracking-tight text-white">
             {marcaItem} {nomeItem}
           </h5>
-          <h5 className="mb-2 text-xl tracking-tight text-gray-900 dark:text-white">
+          <h5 className="mb-2 text-xl tracking-tight text-white">
             Valor inicial: <span className="text-yellow-400">R$ {Number(leilao?.valorInicial ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
           </h5>
-          <h5 className="mb-2 text-xl tracking-tight text-gray-900 dark:text-white">
+          <h5 className="mb-2 text-xl tracking-tight text-white">
             Ano: {leilao?.console?.ano ?? leilao?.midia?.ano ?? "-"}
           </h5>
-          <div className="mb-4 border-b border-gray-200 dark:border-gray-600">
+          <div className="mb-4 border-b border-slate-500">
             <div className="flex gap-5" role="tablist" aria-label="Informações do leilão">
               <button
                 type="button"
                 role="tab"
                 aria-selected={abaAtiva === "detalhes"}
                 onClick={() => setAbaAtiva("detalhes")}
-                className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "detalhes" ? "border-yellow-500 text-gray-900" : "border-transparent text-gray-500"}`}
+                className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "detalhes" ? "border-yellow-400 text-white" : "border-transparent text-slate-300"}`}
               >
                 Detalhes
               </button>
@@ -98,7 +98,7 @@ export default function Detalhes() {
                   role="tab"
                   aria-selected={abaAtiva === "ia"}
                   onClick={() => setAbaAtiva("ia")}
-                  className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "ia" ? "border-yellow-500 text-gray-900" : "border-transparent text-gray-500"}`}
+                  className={`border-b-2 px-1 pb-2 text-sm font-semibold ${abaAtiva === "ia" ? "border-yellow-400 text-white" : "border-transparent text-slate-300"}`}
                 >
                   Análise com IA
                 </button>
@@ -106,7 +106,7 @@ export default function Detalhes() {
             </div>
           </div>
           {abaAtiva === "detalhes" && (
-            <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
+            <p className="mb-3 font-normal text-slate-200">
               {leilao?.descricao}
             </p>
           )}
@@ -128,25 +128,25 @@ export default function Detalhes() {
               </ul>
             </section>
           )}
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-            Início do leilão: <span className="text-green-400">{new Date(leilao?.dataInicio ?? "").toLocaleDateString("pt-BR")}</span>
+          <p className="mb-3 font-normal text-slate-200">
+            Início do leilão: <span className="font-semibold text-emerald-300">{new Date(leilao?.dataInicio ?? "").toLocaleDateString("pt-BR")}</span>
           </p>
-          <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-            Fim do leilão: <span className="text-red-400">{new Date(leilao?.dataFim ?? "").toLocaleDateString("pt-BR")}</span>
+          <p className="mb-3 font-normal text-slate-200">
+            Fim do leilão: <span className="font-semibold text-red-300">{new Date(leilao?.dataFim ?? "").toLocaleDateString("pt-BR")}</span>
           </p>
           {encerrado && <img src={carimbo} alt="Leilão encerrado" className="w-40 mb-4" />}
           {!encerrado && naoIniciado && <p className="mb-4 text-yellow-600">O leilão começará em breve!</p>}
           {!encerrado && !naoIniciado && !usuarioLogado && (
-            <p className="mb-4 text-red-600"><Link to="/login">Logue para dar um lance.</Link></p>
+            <p className="mb-4 text-red-300"><Link to="/login" className="font-semibold underline">Logue para dar um lance.</Link></p>
           )}
           {!encerrado && !naoIniciado && usuarioLogado && (
             <form onSubmit={enviarLance} className="flex flex-col gap-2">
-              <label htmlFor="valor-lance">Seu lance</label>
-              <input id="valor-lance" type="number" min="0.01" step="0.01" required value={valorLance} onChange={(evento) => setValorLance(evento.target.value)} className="p-2 border rounded" />
+              <label htmlFor="valor-lance" className="font-medium text-white">Seu lance</label>
+              <input id="valor-lance" type="number" min="0.01" step="0.01" required value={valorLance} onChange={(evento) => setValorLance(evento.target.value)} className="rounded border border-slate-300 bg-white p-2 text-slate-900 placeholder:text-slate-500" />
               <button type="submit" disabled={enviando} className="w-fit px-4 py-2 text-white bg-[#1d0014] rounded">
                 {enviando ? "Enviando..." : "Dar um lance"}
               </button>
-              {mensagem && <p className="text-sm text-gray-700">{mensagem}</p>}
+              {mensagem && <p className={`text-sm ${mensagem.toLowerCase().includes("inválido") || mensagem.toLowerCase().includes("não") ? "text-red-300" : "text-emerald-300"}`}>{mensagem}</p>}
             </form>
           )}
           {videoItem && (
@@ -154,7 +154,7 @@ export default function Detalhes() {
               href={videoItem}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-fit items-center px-3 py-2 text-sm font-medium text-center text-white">
+              className="inline-flex w-fit items-center px-3 py-2 text-sm font-semibold text-yellow-300 underline decoration-yellow-300 underline-offset-2">
               Ver vídeo
             </a>
           )}
