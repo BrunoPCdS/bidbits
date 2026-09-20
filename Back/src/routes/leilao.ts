@@ -153,31 +153,7 @@ router.post('/', verificarAdmin, async (req, res) => {
   const { nome, descricao, valorInicial, consoleId, midiaId, dataInicio, dataFim, gerarDescricaoComIA } = valida.data
 
   try {
-    let descricaoFinal = descricao
-    let dadosIA = null
-
-    if (gerarDescricaoComIA) {
-      const item = consoleId
-        ? await prisma.console.findUnique({ where: { id: consoleId }, include: { marca: true } })
-        : midiaId
-          ? await prisma.midia.findUnique({ where: { id: midiaId }, include: { marca: true } })
-          : null
-
-      if (!item) {
-        res.status(404).json({ erro: "Item do leilão não encontrado" })
-        return
-      }
-
-      dadosIA = await consultarDadosComIA({
-        nome: item.nome,
-        ano: item.ano,
-        marca: item.marca.nome,
-        tipo: "tipo" in item ? String(item.tipo) : "console",
-      })
-      descricaoFinal = dadosIA.descricao
-    }
-
-    if (!descricaoFinal) {
+    if (!descricao) {
       res.status(400).json({ erro: "Informe uma descrição ou habilite gerarDescricaoComIA" })
       return
     }
@@ -185,8 +161,7 @@ router.post('/', verificarAdmin, async (req, res) => {
     const leilaoItem = await prisma.leilao.create({
       data: {
         nome,
-        descricao: descricaoFinal,
-        ...(dadosIA ? { dadosIA } : {}),
+        descricao,
         valorInicial,
         dataInicio: new Date(dataInicio),
         dataFim: new Date(dataFim),
@@ -200,7 +175,35 @@ router.post('/', verificarAdmin, async (req, res) => {
       },
     })
 
-    res.status(201).json({ ...leilaoItem, dadosIA })
+    if (gerarDescricaoComIA) {
+      void (async () => {
+        try {
+          const item = consoleId
+            ? await prisma.console.findUnique({ where: { id: consoleId }, include: { marca: true } })
+            : midiaId
+              ? await prisma.midia.findUnique({ where: { id: midiaId }, include: { marca: true } })
+              : null
+
+          if (!item) return
+
+          const dadosIA = await consultarDadosComIA({
+            nome: item.nome,
+            ano: item.ano,
+            marca: item.marca.nome,
+            tipo: "tipo" in item ? String(item.tipo) : "console",
+          })
+
+          await prisma.leilao.update({
+            where: { id: leilaoItem.id },
+            data: { descricao: dadosIA.descricao, dadosIA },
+          })
+        } catch (error) {
+          console.error(`Falha ao gerar descrição automática do leilão ${leilaoItem.id}:`, error)
+        }
+      })()
+    }
+
+    res.status(201).json({ ...leilaoItem, dadosIA: null })
   } catch (error) {
     res.status(500).json({ erro: error })
   }

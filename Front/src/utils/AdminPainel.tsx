@@ -241,7 +241,7 @@ export default function AdminPainel() {
     async function cadastrarLeilao(evento: FormEvent) {
         evento.preventDefault()
         try {
-            await enviar("leiloes", { ...leilao, valorInicial: Number(leilao.valorInicial), consoleId: leilao.consoleId ? Number(leilao.consoleId) : null, midiaId: leilao.midiaId ? Number(leilao.midiaId) : null, gerarDescricaoComIA: true }, "Leilão cadastrado")
+            await enviar("leiloes", { ...leilao, valorInicial: Number(leilao.valorInicial), consoleId: leilao.consoleId ? Number(leilao.consoleId) : null, midiaId: leilao.midiaId ? Number(leilao.midiaId) : null, gerarDescricaoComIA: true }, "Leilão cadastrado; descrição sendo gerada automaticamente")
             setLeilao({ nome: "", descricao: "", valorInicial: "", dataInicio: "", dataFim: "", consoleId: "", midiaId: "" })
         } catch (error) { setErro(error instanceof Error ? error.message : "Falha ao cadastrar leilão") }
     }
