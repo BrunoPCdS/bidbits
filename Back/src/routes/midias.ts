@@ -8,7 +8,7 @@ const router = Router();
 
 const midiaSchema = z.object({
     nome: z.string().min(3, {message: 'Nome deve possuir, no mínimo, 3 caracteres'}),
-    marcaid: z.number().int().positive(),
+    marcaid: z.number().int().nonnegative(),
     empresa: z.enum(['Nintendo', 'Sony', 'Microsoft', 'Xbox', 'Atari', 'Sega', 'Tectoy']).default('Nintendo'),
     ano: z.number().int(),
     foto: z.string().min(1, {message: 'Foto é obrigatória'}),

@@ -10,7 +10,7 @@ const empresaSchema = z.enum(["Nintendo", "Sony", "Microsoft", "Xbox", "Atari", 
 
 const consoleSchema = z.object({
   nome: z.string().min(2, { message: "Nome deve possuir, no mínimo, 2 caracteres" }),
-  marcaid: z.number().int().positive(),
+  marcaid: z.number().int().nonnegative(),
   empresa: empresaSchema.default("Nintendo"),
   ano: z.number().int(),
   foto: z.string().min(1, { message: "Foto é obrigatória" }),
