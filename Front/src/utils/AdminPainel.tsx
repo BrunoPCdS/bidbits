@@ -245,7 +245,8 @@ export default function AdminPainel() {
         </>
     }
 
-    return <main className="max-w-6xl mx-auto px-4 py-10"><h1 className="text-3xl font-bold mb-2">Painel administrativo</h1><p className="mb-8 text-gray-600">Cadastre o item primeiro e depois associe-o a um leilão.</p>
+    // DASHBOARD: botão que leva o administrador do painel de cadastros para os indicadores.
+    return <main className="max-w-6xl mx-auto px-4 py-10"><h1 className="text-3xl font-bold mb-2">Painel administrativo</h1> <button type="button" onClick={() => navigate("/admin/dashboard")} className="px-4 py-2 text-white bg-[#1d0014] rounded">Ver dashboard</button><p className="mb-8 text-gray-600">Cadastre o item primeiro e depois associe-o a um leilão.</p>
         {(erro || mensagem) && <p className={erro ? "mb-6 text-red-600" : "mb-6 text-green-600"}>{erro || mensagem}</p>}
         <div className="grid gap-8 lg:grid-cols-2">
             <form onSubmit={cadastrarConsole} className="p-6 border rounded-lg shadow"><h2 className="mb-4 text-xl font-semibold">{consoleEditandoId ? "Alterar console" : "Novo console"}</h2><div className="grid gap-3">{camposItem(consoleForm, setConsoleForm)}<div className="flex gap-2"><button className="px-4 py-2 text-white bg-[#1d0014] rounded">{consoleEditandoId ? "Salvar alteração" : "Cadastrar console"}</button>{consoleEditandoId && <button type="button" onClick={cancelarEdicaoConsole} className="px-4 py-2 border rounded">Cancelar</button>}</div></div></form>

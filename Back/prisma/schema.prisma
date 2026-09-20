@@ -124,6 +124,7 @@ model Usuario {
   senha String
 
   lances Lance[]
+  createdAt DateTime @default(now())
 
   @@map("usuarios")
 }

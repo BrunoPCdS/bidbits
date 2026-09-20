@@ -9,6 +9,7 @@ import Detalhes from './Detalhes.tsx'
 import MeusLances from './utils/MeusLances.tsx'
 import AdminLogin from './utils/AdminLogin.tsx'
 import AdminPainel from './utils/AdminPainel.tsx'
+import Dashboard from './utils/dashboard.tsx'
 
 import Layout from './Layout.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
@@ -25,6 +26,8 @@ const rotas = createBrowserRouter([
       { path: 'meus-lances', element: <MeusLances /> },
       { path: 'admin', element: <AdminLogin /> },
       { path: 'admin/painel', element: <AdminPainel /> },
+      // DASHBOARD: abre a tela de indicadores pelo endereço /admin/dashboard.
+      { path: 'admin/dashboard', element: <Dashboard /> },
     ],
   },
 ])
