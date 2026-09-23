@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { obterItemSessao } from "./sessao"
 
 type Lance = {
     id: number
@@ -14,14 +15,10 @@ type Lance = {
     }
 }
 
-type Usuario = {
-    id: number
-}
-
 const apiUrl = import.meta.env.VITE_API_URL
 
 // Busca novamente os lances depois de cada novo lance enviado.
-async function buscaLances(usuarioId: number) {
+async function buscaLances(usuarioId: string) {
     const resposta = await fetch(`${apiUrl}/clientes/${usuarioId}`)
     const dados = await resposta.json()
     if (!resposta.ok) throw new Error(dados.erro ?? "Não foi possível buscar seus lances")
@@ -37,34 +34,26 @@ export default function MeusLances() {
     const [enviando, setEnviando] = useState<number | null>(null)
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
-        const usuarioSalvo = localStorage.getItem("usuario")
+        const token = obterItemSessao("token")
+        const clienteId = obterItemSessao("clienteId")
 
-        if (!token || !usuarioSalvo) {
+        if (!token || !clienteId) {
             navigate("/login")
             return
         }
 
-        try {
-            const usuario = JSON.parse(usuarioSalvo) as Usuario
-
-            buscaLances(usuario.id)
-                .then(setLances)
-                .catch((error: Error) => setErro(error.message))
-        } catch {
-            localStorage.removeItem("token")
-            localStorage.removeItem("usuario")
-            navigate("/login")
-        }
+        buscaLances(clienteId)
+            .then(setLances)
+            .catch((error: Error) => setErro(error.message))
     }, [navigate])
 
     // Envia um novo lance usando a validacao e autenticacao do backend.
     async function enviarNovoLance(lance: Lance) {
-        const token = localStorage.getItem("token")
-        const usuarioSalvo = localStorage.getItem("usuario")
+        const token = obterItemSessao("token")
+        const clienteId = obterItemSessao("clienteId")
         const valor = Number(novosLances[lance.leilao.id])
 
-        if (!token || !usuarioSalvo || !valor || valor <= lance.maiorLance) {
+        if (!token || !clienteId || !valor || valor <= lance.maiorLance) {
             setErro(`O novo lance deve ser maior que R$ ${lance.maiorLance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.`)
             return
         }
@@ -82,8 +71,7 @@ export default function MeusLances() {
             const dados = await resposta.json()
             if (!resposta.ok) throw new Error(dados.erro ?? "Não foi possível realizar o lance")
 
-            const usuario = JSON.parse(usuarioSalvo) as Usuario
-            setLances(await buscaLances(usuario.id))
+            setLances(await buscaLances(clienteId))
             setNovosLances((valores) => ({ ...valores, [lance.leilao.id]: "" }))
             setErro("")
         } catch (error) {

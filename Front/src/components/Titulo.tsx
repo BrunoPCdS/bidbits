@@ -1,14 +1,15 @@
 import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
+import { limparSessao, obterItemSessao } from "../utils/sessao"
 
 export default function Titulo() {
     const navigate = useNavigate()
-    const [logado, setLogado] = useState(Boolean(localStorage.getItem("token")))
+    const [logado, setLogado] = useState(Boolean(obterItemSessao("token")))
     const [admin, setAdmin] = useState(localStorage.getItem("perfil") === "admin")
 
     useEffect(() => {
         function atualizarSessao() {
-            setLogado(Boolean(localStorage.getItem("token")))
+            setLogado(Boolean(obterItemSessao("token")))
             setAdmin(localStorage.getItem("perfil") === "admin")
         }
 
@@ -22,8 +23,7 @@ export default function Titulo() {
     }, [])
 
     function sair() {
-        localStorage.removeItem("token")
-        localStorage.removeItem("usuario")
+        limparSessao()
         localStorage.removeItem("perfil")
         window.dispatchEvent(new Event("sessao-alterada"))
         navigate("/")

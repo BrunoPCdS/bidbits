@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import carimbo from "./assets/Carimbo.png"
+import { obterItemSessao } from "./utils/sessao"
 
 const apiUrl = import.meta.env.VITE_API_URL
 
@@ -33,7 +34,7 @@ export default function Detalhes() {
   const fim = leilao ? new Date(leilao.dataFim) : null
   const encerrado = fim ? agora >= fim : false
   const naoIniciado = inicio ? agora < inicio : false
-  const usuarioLogado = Boolean(localStorage.getItem("token"))
+  const usuarioLogado = Boolean(obterItemSessao("token"))
   const [valorLance, setValorLance] = useState("")
   const [mensagem, setMensagem] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -42,7 +43,7 @@ export default function Detalhes() {
   async function enviarLance(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     const valor = Number(valorLance)
-    const token = localStorage.getItem("token")
+    const token = obterItemSessao("token")
 
     if (!leilao || !token || !valor || valor <= 0) {
       setMensagem("Informe um valor válido.")
