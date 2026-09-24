@@ -83,6 +83,15 @@ Inicie o servidor:
 ```bash
 npm run dev
 ```
+Para atualizar a documentacao com Swagger:
+
+```bash
+cd Back
+npm run swagger
+npm run dev
+```
+Para visualizar a documentacao no localhost:
+`http://localhost:3000/docs`
 
 API padrao: `http://localhost:3000`
 
