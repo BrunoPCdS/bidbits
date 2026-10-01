@@ -9,6 +9,16 @@ type DashboardData = {
     cadastrosPorMes: { chave: string; total: number }[]
     rankingLeiloes: { id: number; nome: string; quantidadeLances: number; maiorLance: number }[]
     marcasMaisProcuradas: { marca: string; quantidadeLances: number }[]
+    leiloesDetalhados: LeilaoDetalhado[]
+}
+
+type LeilaoDetalhado = {
+    id: number
+    nome: string
+    dataInicio: string
+    dataFim: string
+    lances: { id: number; valor: number; dataLance: string; usuario: { id: number; nome: string; email: string } }[]
+    vencedor: { id: number; nome: string; email: string } | null
 }
 
 const dinheiro = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
@@ -57,5 +67,6 @@ export default function Dashboard() {
         </section>
         {/* Tabela ordenada pelos leilões que receberam mais lances. */}
         <section className="mt-8 p-6 border rounded-lg"><h2 className="text-xl font-semibold mb-4">Leilões com mais lances</h2>{dados.rankingLeiloes.length === 0 ? <p className="text-gray-500">Ainda não há leilões cadastrados.</p> : <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr className="border-b text-sm text-gray-500"><th className="py-3 pr-4">Leilão</th><th className="py-3 pr-4">Lances</th><th className="py-3">Maior lance</th></tr></thead><tbody>{dados.rankingLeiloes.map((item, indice) => <tr key={item.id} className="border-b last:border-0"><td className="py-3 pr-4"><span className="mr-3 text-gray-400">{indice + 1}º</span>{item.nome}</td><td className="py-3 pr-4">{item.quantidadeLances}</td><td className="py-3">{dinheiro.format(item.maiorLance)}</td></tr>)}</tbody></table></div>}</section>
+        <section className="mt-8 p-6 border rounded-lg"><h2 className="text-xl font-semibold mb-4">Participantes e vencedores</h2>{dados.leiloesDetalhados.length === 0 ? <p className="text-gray-500">Ainda não há leilões cadastrados.</p> : <div className="space-y-6">{dados.leiloesDetalhados.map((leilao) => { const encerrado = new Date(leilao.dataFim) <= new Date(); return <article key={leilao.id} className="border rounded-lg p-4"><div className="flex flex-wrap justify-between gap-2 mb-3"><div><h3 className="font-semibold">{leilao.nome}</h3><p className="text-sm text-gray-500">{new Date(leilao.dataInicio).toLocaleString("pt-BR")} até {new Date(leilao.dataFim).toLocaleString("pt-BR")}</p></div><p className="font-semibold">{leilao.vencedor ? `Vencedor: ${leilao.vencedor.nome}` : encerrado ? "Sem vencedor" : "Em andamento"}</p></div>{leilao.lances.length === 0 ? <p className="text-sm text-gray-500">Nenhum lance registrado.</p> : <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b text-gray-500"><th className="py-2 pr-4">Participante</th><th className="py-2 pr-4">E-mail</th><th className="py-2 pr-4">Valor</th><th className="py-2">Data</th></tr></thead><tbody>{leilao.lances.map((lance) => <tr key={lance.id} className="border-b last:border-0"><td className="py-2 pr-4">{lance.usuario.nome}</td><td className="py-2 pr-4">{lance.usuario.email}</td><td className="py-2 pr-4">{dinheiro.format(lance.valor)}</td><td className="py-2">{new Date(lance.dataLance).toLocaleString("pt-BR")}</td></tr>)}</tbody></table></div>}</article> })}</div>}</section>
     </main>
 }

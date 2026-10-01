@@ -62,7 +62,15 @@ router.get("/dashboard", verificarAdmin, async (_req: Request, res: Response) =>
                     id: true, nome: true, valorInicial: true, dataInicio: true, dataFim: true,
                     console: { select: { marca: { select: { nome: true } } } },
                     midia: { select: { marca: { select: { nome: true } } } },
-                    lances: { select: { valor: true } },
+                    lances: {
+                        select: {
+                            id: true,
+                            valor: true,
+                            dataLance: true,
+                            usuario: { select: { id: true, nome: true, email: true } },
+                        },
+                        orderBy: { valor: "desc" },
+                    },
                 },
             }),
             prisma.lance.findMany({
@@ -95,6 +103,15 @@ router.get("/dashboard", verificarAdmin, async (_req: Request, res: Response) =>
             maiorLance: Math.max(leilao.valorInicial, ...leilao.lances.map((lance) => lance.valor)),
         })).sort((a, b) => b.quantidadeLances - a.quantidadeLances).slice(0, 5)
 
+        const leiloesDetalhados = leiloes.map((leilao) => ({
+            id: leilao.id,
+            nome: leilao.nome,
+            dataInicio: leilao.dataInicio,
+            dataFim: leilao.dataFim,
+            lances: leilao.lances,
+            vencedor: agora >= leilao.dataFim ? leilao.lances[0]?.usuario ?? null : null,
+        }))
+
         const marcasMap = new Map<string, number>()
         for (const lance of lances) {
             const marca = lance.leilao.console?.marca.nome ?? lance.leilao.midia?.marca.nome
@@ -107,7 +124,7 @@ router.get("/dashboard", verificarAdmin, async (_req: Request, res: Response) =>
 
         res.status(200).json({
             resumo: { totalClientes: usuarios.length, totalLeiloes: leiloes.length, totalLances: lances.length, leiloesAtivos, maiorLance },
-            cadastrosPorMes: meses, rankingLeiloes, marcasMaisProcuradas,
+            cadastrosPorMes: meses, rankingLeiloes, marcasMaisProcuradas, leiloesDetalhados,
         })
     } catch (error) {
         console.error("Erro ao carregar dashboard:", error)
