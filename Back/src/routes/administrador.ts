@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma"
 import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 import { verificarAdmin } from "../utilit/verificarToken"
 
 
@@ -36,7 +37,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
     const admin = await prisma.admin.findUnique({ where: { email: valida.data.email } })
 
-    if (!admin || admin.senha !== valida.data.senha) {
+    if (!admin || !(await bcrypt.compare(valida.data.senha, admin.senha))) {
         res.status(401).json({ erro: "Email ou senha de administrador inválidos" })
         return
     }
@@ -168,8 +169,9 @@ router.post("/", async (req: Request, res: Response) => {
     const { nome, email, senha } = valida.data
 
     try {
+        const senhaHash = await bcrypt.hash(senha, 12)
         const admin = await prisma.admin.create({
-            data: { nome, email, senha },
+            data: { nome, email, senha: senhaHash },
             select: adminPublico
         })
 
@@ -195,9 +197,11 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     try {
+        const dados = { ...valida.data }
+        if (dados.senha) dados.senha = await bcrypt.hash(dados.senha, 12)
         const admin = await prisma.admin.update({
             where: { id },
-            data: valida.data,
+            data: dados,
             select: adminPublico
         })
 

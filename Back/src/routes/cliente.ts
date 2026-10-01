@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma"
 import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 
 const router = Router()
 
@@ -34,7 +35,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
     const usuario = await prisma.usuario.findUnique({ where: { email: valida.data.email } })
 
-    if (!usuario || usuario.senha !== valida.data.senha) {
+    if (!usuario || !(await bcrypt.compare(valida.data.senha, usuario.senha))) {
         res.status(401).json({ erro: "Email ou senha inválidos" })
         return
     }
@@ -133,11 +134,12 @@ router.post("/", async (req: Request, res: Response) => {
     const { nome, email, senha } = valida.data
 
     try {
+        const senhaHash = await bcrypt.hash(senha, 12)
         const cliente = await prisma.usuario.create({
             data: {
                 nome,
                 email,
-                senha
+                senha: senhaHash
             },
             select: usuarioPublico
         })
@@ -166,12 +168,13 @@ router.put("/:id", async (req: Request, res: Response) => {
     const { nome, email, senha } = valida.data
 
     try {
+        const senhaHash = await bcrypt.hash(senha, 12)
         const cliente = await prisma.usuario.update({
             where: { id },
             data: {
                 nome,
                 email,
-                senha
+                senha: senhaHash
             },
             select: usuarioPublico
         })
